@@ -1,0 +1,1695 @@
+{
+ "jobs": [
+  {
+   "name": "구매관리",
+   "relatedJobs": [
+    "생산기획",
+    "자재관리",
+    "생산관리"
+   ]
+  },
+  {
+   "name": "생산관리",
+   "relatedJobs": [
+    "생산기획",
+    "품질관리",
+    "자재관리"
+   ]
+  },
+  {
+   "name": "생산기획",
+   "relatedJobs": [
+    "생산관리",
+    "구매관리"
+   ]
+  },
+  {
+   "name": "자재관리",
+   "relatedJobs": [
+    "구매관리",
+    "생산관리"
+   ]
+  },
+  {
+   "name": "품질관리",
+   "relatedJobs": [
+    "생산관리"
+   ]
+  },
+  {
+   "name": "영업관리",
+   "relatedJobs": [
+    "생산기획"
+   ]
+  },
+  {
+   "name": "인사",
+   "relatedJobs": [
+    "재무"
+   ]
+  },
+  {
+   "name": "재무",
+   "relatedJobs": [
+    "인사",
+    "구매관리"
+   ]
+  }
+ ],
+ "employees": [
+  {
+   "id": "E0001",
+   "name": "김OO",
+   "department": "(샘플)생산1팀",
+   "payGrade": "G3",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2018-03-01",
+   "currentJob": "생산관리",
+   "deptStartDate": "2021-08-01",
+   "jobHistory": [
+    {
+     "job": "생산기획",
+     "startDate": "2018-03-01",
+     "endDate": "2021-07-31",
+     "isCurrent": false
+    },
+    {
+     "job": "생산관리",
+     "startDate": "2021-08-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [
+     "생산기획"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0002",
+   "name": "이OO",
+   "department": "(샘플)자재팀",
+   "payGrade": "G2",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2022-03-01",
+   "currentJob": "자재관리",
+   "deptStartDate": "2022-03-01",
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": "2022-03-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [
+     "생산기획"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0003",
+   "name": "박OO",
+   "department": "(샘플)구매팀",
+   "payGrade": "G4",
+   "payGradeYears": 5,
+   "jobTitle": "파트장",
+   "position": "책임매니저",
+   "hireDate": "2015-01-01",
+   "currentJob": "구매관리",
+   "deptStartDate": "2019-01-01",
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": "2015-01-01",
+     "endDate": "2018-12-31",
+     "isCurrent": false
+    },
+    {
+     "job": "구매관리",
+     "startDate": "2019-01-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "재무"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "O",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "E"
+    }
+   ]
+  },
+  {
+   "id": "E0004",
+   "name": "최OO",
+   "department": "(샘플)품질팀",
+   "payGrade": "G3",
+   "payGradeYears": 4,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2016-04-01",
+   "currentJob": "품질관리",
+   "deptStartDate": "2020-05-01",
+   "jobHistory": [
+    {
+     "job": "생산관리",
+     "startDate": "2016-04-01",
+     "endDate": "2020-04-30",
+     "isCurrent": false
+    },
+    {
+     "job": "품질관리",
+     "startDate": "2020-05-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "생산기획"
+    ],
+    "mid": [],
+    "long": [
+     "구매관리"
+    ],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "N",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "E"
+    }
+   ]
+  },
+  {
+   "id": "E0005",
+   "name": "정OO",
+   "department": "(샘플)영업팀",
+   "payGrade": "G2",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2023-07-01",
+   "currentJob": "영업관리",
+   "deptStartDate": "2023-07-01",
+   "jobHistory": [
+    {
+     "job": "영업관리",
+     "startDate": "2023-07-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [
+     "구매관리"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "N"
+    }
+   ]
+  },
+  {
+   "id": "E0006",
+   "name": "강OO",
+   "department": "(샘플)생산2팀",
+   "payGrade": "G4",
+   "payGradeYears": 6,
+   "jobTitle": "팀장",
+   "position": "책임매니저",
+   "hireDate": "2012-02-01",
+   "currentJob": "생산관리",
+   "deptStartDate": "2017-02-01",
+   "jobHistory": [
+    {
+     "job": "생산관리",
+     "startDate": "2017-02-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "O",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "E"
+    }
+   ]
+  },
+  {
+   "id": "E0007",
+   "name": "조OO",
+   "department": "(샘플)인사팀",
+   "payGrade": "G3",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2016-01-01",
+   "currentJob": "인사",
+   "deptStartDate": "2020-01-01",
+   "jobHistory": [
+    {
+     "job": "재무",
+     "startDate": "2016-01-01",
+     "endDate": "2019-12-31",
+     "isCurrent": false
+    },
+    {
+     "job": "인사",
+     "startDate": "2020-01-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "재무"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0008",
+   "name": "윤OO",
+   "department": "(샘플)재무팀",
+   "payGrade": "G2",
+   "payGradeYears": 1,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2021-07-01",
+   "currentJob": "재무",
+   "deptStartDate": "2024-01-01",
+   "jobHistory": [
+    {
+     "job": "재무",
+     "startDate": "2024-01-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "인사"
+    ],
+    "mid": [
+     "재무"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0009",
+   "name": "장OO",
+   "department": "(샘플)생산기획팀",
+   "payGrade": "R2",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2019-03-01",
+   "currentJob": "생산기획",
+   "deptStartDate": "2022-09-01",
+   "jobHistory": [
+    {
+     "job": "생산관리",
+     "startDate": "2019-03-01",
+     "endDate": "2022-08-31",
+     "isCurrent": false
+    },
+    {
+     "job": "생산기획",
+     "startDate": "2022-09-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0010",
+   "name": "임OO",
+   "department": "(샘플)자재팀",
+   "payGrade": "G4",
+   "payGradeYears": 4,
+   "jobTitle": "파트장",
+   "position": "책임매니저",
+   "hireDate": "2014-03-01",
+   "currentJob": "자재관리",
+   "deptStartDate": null,
+   "jobHistory": [
+    {
+     "job": "구매관리",
+     "startDate": "2014-03-01",
+     "endDate": "2018-02-28",
+     "isCurrent": false
+    },
+    {
+     "job": "자재관리",
+     "startDate": "2018-03-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0011",
+   "name": "한OO",
+   "department": "(샘플)품질팀",
+   "payGrade": "G1",
+   "payGradeYears": 1,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": null,
+   "currentJob": "품질관리",
+   "deptStartDate": "2025-03-01",
+   "jobHistory": [
+    {
+     "job": "품질관리",
+     "startDate": "2025-03-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "생산관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0012",
+   "name": "오OO",
+   "department": "(샘플)영업팀",
+   "payGrade": "G3",
+   "payGradeYears": 5,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2015-06-01",
+   "currentJob": "영업관리",
+   "deptStartDate": "2019-06-01",
+   "jobHistory": [
+    {
+     "job": "생산기획",
+     "startDate": "2015-06-01",
+     "endDate": "2019-05-31",
+     "isCurrent": false
+    },
+    {
+     "job": "영업관리",
+     "startDate": "2019-06-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "N",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "N"
+    }
+   ]
+  },
+  {
+   "id": "E0013",
+   "name": "서OO",
+   "department": "(샘플)생산1팀",
+   "payGrade": "G2",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2020-01-01",
+   "currentJob": "생산관리",
+   "deptStartDate": "2023-01-01",
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": null,
+     "endDate": null,
+     "isCurrent": false
+    },
+    {
+     "job": "생산관리",
+     "startDate": "2023-01-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [
+     "구매관리"
+    ],
+    "long": [
+     "생산기획"
+    ],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0014",
+   "name": "신OO",
+   "department": "(샘플)구매팀",
+   "payGrade": "R3",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2017-04-01",
+   "currentJob": "구매관리",
+   "deptStartDate": "2021-04-01",
+   "jobHistory": [
+    {
+     "job": "구매관리",
+     "startDate": "2021-04-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "자재관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0015",
+   "name": "권OO",
+   "department": "(샘플)인사팀",
+   "payGrade": "G2",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2022-07-01",
+   "currentJob": "인사",
+   "deptStartDate": "2022-07-01",
+   "jobHistory": [
+    {
+     "job": "인사",
+     "startDate": "2022-07-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "영업관리"
+    ],
+    "mid": [],
+    "long": [
+     "구매관리"
+    ],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0016",
+   "name": "황OO",
+   "department": "(샘플)재무팀",
+   "payGrade": "G4",
+   "payGradeYears": 7,
+   "jobTitle": "팀장",
+   "position": "책임매니저",
+   "hireDate": "2012-09-01",
+   "currentJob": "재무",
+   "deptStartDate": "2016-09-01",
+   "jobHistory": [
+    {
+     "job": "구매관리",
+     "startDate": "2012-09-01",
+     "endDate": "2016-08-31",
+     "isCurrent": false
+    },
+    {
+     "job": "재무",
+     "startDate": "2016-09-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "O",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "E",
+     "competency": "O"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "E"
+    }
+   ]
+  },
+  {
+   "id": "E0017",
+   "name": "안OO",
+   "department": "(샘플)생산2팀",
+   "payGrade": "G3",
+   "payGradeYears": 4,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2018-05-01",
+   "currentJob": "생산관리",
+   "deptStartDate": null,
+   "jobHistory": [
+    {
+     "job": "생산관리",
+     "startDate": "2018-05-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "품질관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0018",
+   "name": "송OO",
+   "department": "(샘플)생산기획팀",
+   "payGrade": "R4",
+   "payGradeYears": 3,
+   "jobTitle": "파트장",
+   "position": "책임매니저",
+   "hireDate": "2013-11-01",
+   "currentJob": "생산기획",
+   "deptStartDate": "2018-11-01",
+   "jobHistory": [
+    {
+     "job": "생산기획",
+     "startDate": "2018-11-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [
+     "자재관리"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0019",
+   "name": "류OO",
+   "department": "(샘플)자재팀",
+   "payGrade": "G1",
+   "payGradeYears": 1,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2025-08-01",
+   "currentJob": "자재관리",
+   "deptStartDate": "2025-08-01",
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": "2025-08-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0020",
+   "name": "전OO",
+   "department": "(샘플)품질팀",
+   "payGrade": "G3",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2017-10-01",
+   "currentJob": "품질관리",
+   "deptStartDate": "2019-10-01",
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": "2017-10-01",
+     "endDate": null,
+     "isCurrent": false
+    },
+    {
+     "job": "품질관리",
+     "startDate": "2019-10-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [],
+    "long": [
+     "구매관리"
+    ],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "N",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0021",
+   "name": "홍OO",
+   "department": "(샘플)영업팀",
+   "payGrade": "G4",
+   "payGradeYears": 8,
+   "jobTitle": "팀장",
+   "position": "책임매니저",
+   "hireDate": "2010-04-01",
+   "currentJob": "영업관리",
+   "deptStartDate": "2015-04-01",
+   "jobHistory": [
+    {
+     "job": "영업관리",
+     "startDate": "2015-04-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2021,
+     "performance": "O",
+     "competency": "E"
+    }
+   ]
+  },
+  {
+   "id": "E0022",
+   "name": "고OO",
+   "department": "(샘플)생산1팀",
+   "payGrade": "G2",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2021-04-01",
+   "currentJob": "생산관리",
+   "deptStartDate": "2024-04-01",
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": "2021-04-01",
+     "endDate": "2024-03-31",
+     "isCurrent": false
+    },
+    {
+     "job": "생산관리",
+     "startDate": "2024-04-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "자재관리"
+    ],
+    "mid": [
+     "구매관리"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "E"
+    }
+   ]
+  },
+  {
+   "id": "E0023",
+   "name": "문OO",
+   "department": "(샘플)인사팀",
+   "payGrade": "G3",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2016-01-01",
+   "currentJob": "인사",
+   "deptStartDate": "2021-01-01",
+   "jobHistory": [
+    {
+     "job": "인사",
+     "startDate": "2021-01-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "재무"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0024",
+   "name": "양OO",
+   "department": "(샘플)재무팀",
+   "payGrade": "R3",
+   "payGradeYears": 4,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2020-02-01",
+   "currentJob": "재무",
+   "deptStartDate": "2020-02-01",
+   "jobHistory": [
+    {
+     "job": "재무",
+     "startDate": "2020-02-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0025",
+   "name": "손OO",
+   "department": "(샘플)생산기획팀",
+   "payGrade": "R1",
+   "payGradeYears": null,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2023-05-01",
+   "currentJob": "생산기획",
+   "deptStartDate": "2023-05-01",
+   "jobHistory": [
+    {
+     "job": "생산기획",
+     "startDate": "2023-05-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "생산관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0026",
+   "name": "배OO",
+   "department": "(샘플)구매팀",
+   "payGrade": "G2",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "매니저",
+   "hireDate": "2020-02-01",
+   "currentJob": "구매관리",
+   "deptStartDate": "2024-02-01",
+   "jobHistory": [
+    {
+     "job": "생산관리",
+     "startDate": "2020-02-01",
+     "endDate": "2024-01-31",
+     "isCurrent": false
+    },
+    {
+     "job": "구매관리",
+     "startDate": "2024-02-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "생산기획"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0027",
+   "name": "백OO",
+   "department": "(샘플)자재팀",
+   "payGrade": "G3",
+   "payGradeYears": 2,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2019-07-01",
+   "currentJob": "자재관리",
+   "deptStartDate": null,
+   "jobHistory": [
+    {
+     "job": "자재관리",
+     "startDate": "2019-07-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "생산관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0028",
+   "name": "허OO",
+   "department": "(샘플)품질팀",
+   "payGrade": "G4",
+   "payGradeYears": 5,
+   "jobTitle": "파트장",
+   "position": "책임매니저",
+   "hireDate": "2013-12-01",
+   "currentJob": "품질관리",
+   "deptStartDate": "2017-12-01",
+   "jobHistory": [
+    {
+     "job": "생산기획",
+     "startDate": "2013-12-01",
+     "endDate": "2017-11-30",
+     "isCurrent": false
+    },
+    {
+     "job": "품질관리",
+     "startDate": "2017-12-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [
+     "구매관리"
+    ],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "E",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "E",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2021,
+     "performance": "E",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0029",
+   "name": "유OO",
+   "department": "(샘플)생산2팀",
+   "payGrade": "G3",
+   "payGradeYears": 3,
+   "jobTitle": "팀원",
+   "position": "책임매니저",
+   "hireDate": "2016-03-01",
+   "currentJob": "생산관리",
+   "deptStartDate": "2020-08-01",
+   "jobHistory": [
+    {
+     "job": "생산기획",
+     "startDate": null,
+     "endDate": "2020-07-31",
+     "isCurrent": false
+    },
+    {
+     "job": "생산관리",
+     "startDate": "2020-08-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [
+     "구매관리"
+    ],
+    "mid": [],
+    "long": [],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2024,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2023,
+     "performance": "M",
+     "competency": "E"
+    },
+    {
+     "year": 2022,
+     "performance": "M",
+     "competency": "M"
+    },
+    {
+     "year": 2021,
+     "performance": "M",
+     "competency": "M"
+    }
+   ]
+  },
+  {
+   "id": "E0030",
+   "name": "남OO",
+   "department": "(샘플)영업팀",
+   "payGrade": "G1",
+   "payGradeYears": 2,
+   "jobTitle": null,
+   "position": "매니저",
+   "hireDate": "2025-01-01",
+   "currentJob": "영업관리",
+   "deptStartDate": "2025-01-01",
+   "jobHistory": [
+    {
+     "job": "영업관리",
+     "startDate": "2025-01-01",
+     "endDate": null,
+     "isCurrent": true
+    }
+   ],
+   "desiredJobs": {
+    "short": [],
+    "mid": [],
+    "long": [
+     "구매관리"
+    ],
+    "unspecified": []
+   },
+   "evaluations": [
+    {
+     "year": 2025,
+     "performance": "M",
+     "competency": "E"
+    }
+   ]
+  }
+ ]
+}
