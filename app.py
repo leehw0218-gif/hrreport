@@ -29,6 +29,10 @@ st.markdown("""
   /* Pretendard는 자간을 살짝 좁히면 한글이 더 단정하게 읽힌다 */
   html, body, [class*="st-"], button, input, textarea { letter-spacing: -0.01em; }
   h1, h2, h3, h4 { letter-spacing: -0.025em; }
+  /* 비밀번호 칸의 '비밀번호 보기' 버튼을 숨긴다. 이 버튼이 있으면 Tab 키가 다음 칸이 아니라 버튼으로 가서
+     입력한 글자가 사라지고 "8자 이상" 같은 오류가 났다 (숨기면 Tab 순서에서도 빠진다) */
+  [data-testid="stTextInput"] button[aria-label="Show password"],
+  [data-testid="stTextInput"] button[aria-label="Hide password"] { display: none; }
   /* 한글이 "2개" / "월"처럼 낱말 중간에서 줄바꿈되지 않게 한다 */
   [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] *,
   [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { word-break: keep-all !important; overflow-wrap: anywhere; }
@@ -285,42 +289,56 @@ def render_login(state: dict) -> None:
         st.caption("본 도구는 HR 담당자의 검토를 돕는 참고정보를 제공하며, 최종 인사 결정을 하지 않습니다.")
 
 
-def change_password(emp_no: str, prefix: str):
-    current = st.session_state.get(prefix + "current", "")
-    new = st.session_state.get(prefix + "new", "")
-    confirm = st.session_state.get(prefix + "confirm", "")
+def password_change_error(emp_no: str, current: str, new: str, confirm: str) -> str | None:
+    """어느 칸이 문제인지, 실제로 몇 글자가 들어왔는지까지 알려 준다"""
+    if not current:
+        return "현재 비밀번호 칸이 비어 있습니다."
     if not auth.check_password(emp_no, current):
-        st.session_state[prefix + "error"] = ("현재 비밀번호가 맞지 않습니다. 이미 비밀번호를 바꿨다면 처음 비밀번호(사원번호)가 아니라 "
-                                              "바꾼 비밀번호를 입력하세요. 기억나지 않으면 관리자에게 초기화를 요청하세요.")
-        return
-    problem = auth.password_problem(emp_no, new) or (None if new == confirm else "새 비밀번호가 서로 다릅니다.")
+        return ("현재 비밀번호가 맞지 않습니다. 이미 비밀번호를 바꿨다면 처음 비밀번호(사원번호)가 아니라 "
+                "바꾼 비밀번호를 입력하세요. 기억나지 않으면 관리자에게 초기화를 요청하세요.")
+    if not new:
+        return "새 비밀번호 칸이 비어 있습니다."
+    problem = auth.password_problem(emp_no, new)
     if problem:
-        st.session_state[prefix + "error"] = problem
-        return
-    auth.set_password(emp_no, new)
-    st.session_state["must_change"] = False
-    for k in ("current", "new", "confirm"):
-        st.session_state[prefix + k] = ""
-    # 몇 초 뒤 사라지는 알림만으로는 바뀐 것을 놓치기 쉬워 화면 위에도 남긴다
-    st.session_state["_flash"] = ("success", "비밀번호를 바꿨습니다. 다음 로그인부터는 새 비밀번호를 쓰세요. "
-                                             "처음 비밀번호(사원번호)로는 더 이상 로그인할 수 없습니다.")
-    st.toast("비밀번호를 바꿨습니다.")
+        return f"새 비밀번호: {problem} (입력된 글자 수 {len(new)}자)"
+    if not confirm:
+        return "새 비밀번호 확인 칸이 비어 있습니다."
+    if new != confirm:
+        return "새 비밀번호와 확인 칸의 내용이 다릅니다."
+    return None
 
 
 def render_password_form(emp_no: str, forced: bool) -> None:
+    """비밀번호 변경. 세 칸을 하나의 form으로 묶어 버튼(또는 Enter)을 누를 때 한꺼번에 보낸다.
+
+    form 없이 칸마다 따로 두면, Tab 키가 '비밀번호 보기' 버튼으로 먼저 가면서 입력값이 저장되지 않는 일이 있었다.
+    """
     prefix = "pw_forced::" if forced else "pw::"
     rec = auth.load()["users"].get(emp_no, {})
     if not forced:
         st.caption("지금 비밀번호: " + ("처음 비밀번호(사원번호)" if not rec.get("hash")
                                         else f"{fmt_dt(rec.get('passwordChangedAt')) or ''}에 바꾼 비밀번호"))
-    st.text_input("현재 비밀번호" + (" (처음이면 사원번호)" if forced else ""), type="password", key=prefix + "current")
-    st.text_input("새 비밀번호", type="password", key=prefix + "new",
-                  help=f"{auth.MIN_PASSWORD_LENGTH}자 이상, 영문과 숫자를 함께 쓰고, 사원번호와 달라야 합니다.")
-    st.text_input("새 비밀번호 확인", type="password", key=prefix + "confirm")
-    error = st.session_state.pop(prefix + "error", None)
+    st.caption(f"새 비밀번호 규칙: {auth.MIN_PASSWORD_LENGTH}자 이상, 영문과 숫자를 함께, 사원번호와 다르게. "
+               "칸을 마우스로 눌러 입력하세요.")
+    with st.form(prefix + "form", border=False):
+        current = st.text_input("현재 비밀번호" + (" (처음이면 사원번호)" if forced else ""), type="password", key=prefix + "current")
+        new = st.text_input("새 비밀번호", type="password", key=prefix + "new")
+        confirm = st.text_input("새 비밀번호 확인", type="password", key=prefix + "confirm")
+        submitted = st.form_submit_button("비밀번호 바꾸기", type="primary")
+    if not submitted:
+        return
+    error = password_change_error(emp_no, current, new, confirm)
     if error:
         st.error(error)
-    st.button("비밀번호 바꾸기", type="primary", on_click=change_password, args=(emp_no, prefix), key=prefix + "submit")
+        return
+    auth.set_password(emp_no, new)
+    st.session_state["must_change"] = False
+    for k in ("current", "new", "confirm"):
+        st.session_state.pop(prefix + k, None)  # 입력한 비밀번호를 세션에 남기지 않는다
+    # 몇 초 뒤 사라지는 알림만으로는 바뀐 것을 놓치기 쉬워 화면 위에도 남긴다
+    st.session_state["_flash"] = ("success", "비밀번호를 바꿨습니다. 다음 로그인부터는 새 비밀번호를 쓰세요. "
+                                             "처음 비밀번호(사원번호)로는 더 이상 로그인할 수 없습니다.")
+    st.rerun()
 
 
 def render_forced_password_change(user: dict) -> None:
