@@ -290,7 +290,8 @@ def change_password(emp_no: str, prefix: str):
     new = st.session_state.get(prefix + "new", "")
     confirm = st.session_state.get(prefix + "confirm", "")
     if not auth.check_password(emp_no, current):
-        st.session_state[prefix + "error"] = "현재 비밀번호가 맞지 않습니다."
+        st.session_state[prefix + "error"] = ("현재 비밀번호가 맞지 않습니다. 이미 비밀번호를 바꿨다면 처음 비밀번호(사원번호)가 아니라 "
+                                              "바꾼 비밀번호를 입력하세요. 기억나지 않으면 관리자에게 초기화를 요청하세요.")
         return
     problem = auth.password_problem(emp_no, new) or (None if new == confirm else "새 비밀번호가 서로 다릅니다.")
     if problem:
@@ -300,11 +301,18 @@ def change_password(emp_no: str, prefix: str):
     st.session_state["must_change"] = False
     for k in ("current", "new", "confirm"):
         st.session_state[prefix + k] = ""
+    # 몇 초 뒤 사라지는 알림만으로는 바뀐 것을 놓치기 쉬워 화면 위에도 남긴다
+    st.session_state["_flash"] = ("success", "비밀번호를 바꿨습니다. 다음 로그인부터는 새 비밀번호를 쓰세요. "
+                                             "처음 비밀번호(사원번호)로는 더 이상 로그인할 수 없습니다.")
     st.toast("비밀번호를 바꿨습니다.")
 
 
 def render_password_form(emp_no: str, forced: bool) -> None:
     prefix = "pw_forced::" if forced else "pw::"
+    rec = auth.load()["users"].get(emp_no, {})
+    if not forced:
+        st.caption("지금 비밀번호: " + ("처음 비밀번호(사원번호)" if not rec.get("hash")
+                                        else f"{fmt_dt(rec.get('passwordChangedAt')) or ''}에 바꾼 비밀번호"))
     st.text_input("현재 비밀번호" + (" (처음이면 사원번호)" if forced else ""), type="password", key=prefix + "current")
     st.text_input("새 비밀번호", type="password", key=prefix + "new",
                   help=f"{auth.MIN_PASSWORD_LENGTH}자 이상, 영문과 숫자를 함께 쓰고, 사원번호와 달라야 합니다.")
