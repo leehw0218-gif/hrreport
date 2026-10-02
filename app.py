@@ -4,6 +4,8 @@
 - 분석·CSV·저장 로직은 hr_tool/ 에 있고, 이 파일은 화면만 맡는다.
 - 데이터는 data/hr_data.json 에 자동 저장한다 (새로고침해도 유지).
 - 사용자 입력은 화면에 넣을 때 마크다운 특수문자를 이스케이프한다 (md 함수).
+- 로그인: 사원번호로 로그인한다. 관리자는 전체 데이터를 다루고, 그 외 사용자는 자기 사업부(없으면 본부) 소속원만
+  조회하고 검토 상태·메모를 입력한다. 권한 확인은 화면을 숨기는 것과 별도로 데이터를 바꾸는 함수 안에서도 한다.
 """
 from __future__ import annotations
 
@@ -14,6 +16,7 @@ import pandas as pd
 import streamlit as st
 
 from hr_tool import analysis as A
+from hr_tool import auth
 from hr_tool import csv_io
 from hr_tool import model as M
 from hr_tool import storage
@@ -23,6 +26,12 @@ st.set_page_config(page_title="전환배치 후보자 탐색", page_icon="🧭",
 st.markdown("""
 <style>
   .block-container { padding-top: 2rem; }
+  /* Pretendard는 자간을 살짝 좁히면 한글이 더 단정하게 읽힌다 */
+  html, body, [class*="st-"], button, input, textarea { letter-spacing: -0.01em; }
+  h1, h2, h3, h4 { letter-spacing: -0.025em; }
+  /* 한글이 "2개" / "월"처럼 낱말 중간에서 줄바꿈되지 않게 한다 */
+  [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] *,
+  [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { word-break: keep-all !important; overflow-wrap: anywhere; }
   div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0.25rem; }
 </style>
 """, unsafe_allow_html=True)
@@ -56,6 +65,63 @@ def fmt_dt(iso: str | None) -> str | None:
 
 def file_stamp() -> str:
     return M.now_kst().strftime("%Y%m%d_%H%M")
+
+
+# ---------------------------------------------------------------------------
+# 로그인 사용자와 권한
+# ---------------------------------------------------------------------------
+
+def auth_config() -> dict:
+    """배포 설정(Secrets)의 [auth]. 없으면 관리자 없음 + 첫 로그인 때 비밀번호 변경"""
+    try:
+        sec = dict(st.secrets.get("auth", {}))
+    except Exception:  # secrets.toml이 없는 환경
+        sec = {}
+    return {"admin_ids": [str(x).strip() for x in sec.get("admin_ids", []) if str(x).strip()],
+            "require_change": bool(sec.get("require_password_change", True))}
+
+
+def current_user(state: dict | None = None) -> dict | None:
+    """로그인한 사용자. 실행할 때마다 파일에서 권한과 소속을 다시 계산한다 (권한이 바뀌면 바로 반영)"""
+    uid = st.session_state.get("auth_user")
+    if not uid:
+        return None
+    if state is None:
+        state = storage.load()[0]
+    cfg = auth_config()
+    data = auth.load()
+    if not auth.account_exists(uid, {e["id"] for e in state["employees"]}, data, cfg["admin_ids"]):
+        return None  # 직원 목록에서 빠졌거나 관리자 권한이 회수됨
+    emp = find_employee(state, uid)
+    admin = auth.is_admin(uid, data, cfg["admin_ids"])
+    return {"id": uid, "name": emp["name"] if emp else uid, "employee": emp, "is_admin": admin,
+            "config_admin": uid in cfg["admin_ids"], "scope": None if admin else M.scope_of(emp)}
+
+
+def visible_employees(state: dict, user: dict | None) -> list[dict]:
+    """관리자는 전체, 그 외에는 같은 사업부(없으면 본부) 소속원. 본인은 빼고 보여 준다"""
+    if not user:
+        return []
+    if user["is_admin"]:
+        return state["employees"]
+    return [e for e in state["employees"] if e["id"] != user["id"] and M.in_scope(e, user["scope"])]
+
+
+def can_view(state: dict, user: dict | None, emp_id: str) -> bool:
+    return any(e["id"] == emp_id for e in visible_employees(state, user))
+
+
+def require_admin() -> bool:
+    user = current_user()
+    if user and user["is_admin"]:
+        return True
+    st.session_state["_flash"] = ("error", "관리자만 할 수 있는 작업입니다.")
+    return False
+
+
+def logout():
+    for k in list(st.session_state.keys()):
+        del st.session_state[k]
 
 
 # ---------------------------------------------------------------------------
@@ -98,14 +164,9 @@ def find_review(state: dict, emp_id: str, target: str):
 def upsert_review(state: dict, emp_id: str, target: str, **patch) -> None:
     r = find_review(state, emp_id, target)
     if r is None:
-        r = {"employeeId": emp_id, "targetJob": target, "status": "미검토", "memo": "", "updatedAt": None}
+        r = {"employeeId": emp_id, "targetJob": target, "status": "미검토", "memo": "", "updatedAt": None, "updatedBy": None}
         state["reviews"].append(r)
-    r.update(patch, updatedAt=M.now_kst().isoformat(timespec="seconds"))
-
-
-def next_employee_id(employees: list[dict]) -> str:
-    nums = [int(m.group(1)) for e in employees if (m := re.fullmatch(r"E(\d+)", e["id"]))]
-    return f"E{(max(nums) if nums else 0) + 1:04d}"
+    r.update(patch, updatedAt=M.now_kst().isoformat(timespec="seconds"), updatedBy=st.session_state.get("auth_user"))
 
 
 def job_usage_count(state: dict, name: str) -> int:
@@ -146,14 +207,18 @@ def career_summary(result: dict) -> str | None:
 # ---------------------------------------------------------------------------
 
 def record_backup():
+    if not require_admin():
+        return
     mutate(lambda s: s.update(lastBackupAt=M.now_kst().isoformat(timespec="seconds")), "백업 파일을 내려받았습니다.")
 
 
 def load_sample():
+    if not require_admin():
+        return
     sample = storage.migrate(_sample_data())[0]
 
     def apply(s):
-        s.update(jobs=sample["jobs"], employees=sample["employees"], reviews=[], lastQuery=None)
+        s.update(jobs=sample["jobs"], employees=sample["employees"], reviews=[], userQueries={})
     mutate(apply, "가상 샘플 데이터를 불러왔습니다.")
     reset_search_widgets()
 
@@ -165,21 +230,101 @@ def _sample_data() -> dict:
     return json.loads((Path(__file__).parent / "hr_tool" / "sample_data.json").read_text(encoding="utf-8"))
 
 
-def render_sidebar(state: dict, warning: str | None, block: bool) -> None:
+def scope_text(user: dict) -> str:
+    if user["is_admin"]:
+        return "전체 직원 (관리자)"
+    return user["scope"]["label"] if user["scope"] else "조회 범위 없음 (소속 정보 없음)"
+
+
+def render_sidebar(state: dict, user: dict) -> None:
     with st.sidebar:
         st.markdown("### 🧭 전환배치 후보자 탐색")
-        st.caption(f"직원 {len(state['employees'])}명 · 직무 {len(state['jobs'])}개")
-        st.caption("마지막 저장: " + (fmt_dt(state.get("savedAt")) or "기록 없음"))
-        st.caption("마지막 백업: " + (fmt_dt(state.get("lastBackupAt")) or "기록 없음"))
-        st.download_button("백업 파일 받기 (JSON)", storage.backup_bytes(state), f"전환배치도구_백업_{file_stamp()}.json",
-                           "application/json", on_click=record_backup, width="stretch", key="sb_backup")
+        st.markdown(f"**{md(user['name'])}** ({md(user['id'])})  \n" +
+                    (":blue-badge[관리자]" if user["is_admin"] else ":gray-badge[일반 사용자]"))
+        st.caption("조회 범위: " + scope_text(user))
+        c1, c2 = st.columns(2)
+        with c1.popover("비밀번호 변경", width="stretch"):
+            render_password_form(user["id"], forced=False)
+        c2.button("로그아웃", on_click=logout, width="stretch", key="sb_logout")
         st.divider()
-        st.caption("데이터는 이 앱이 실행 중인 서버의 파일(data/hr_data.json)에 저장됩니다. "
-                   "Streamlit Cloud에서는 앱이 다시 시작되면 지워질 수 있으니 백업 파일을 받아 두세요.")
+        if user["is_admin"]:
+            st.caption(f"직원 {len(state['employees'])}명 · 직무 {len(state['jobs'])}개")
+            st.caption("마지막 저장: " + (fmt_dt(state.get("savedAt")) or "기록 없음"))
+            st.caption("마지막 백업: " + (fmt_dt(state.get("lastBackupAt")) or "기록 없음"))
+            st.download_button("백업 파일 받기 (JSON)", storage.backup_bytes(state), f"전환배치도구_백업_{file_stamp()}.json",
+                               "application/json", on_click=record_backup, width="stretch", key="sb_backup")
+            st.caption("데이터는 이 앱이 실행 중인 서버의 파일(data/hr_data.json)에 저장됩니다. "
+                       "Streamlit Cloud에서는 앱이 다시 시작되면 지워질 수 있으니 백업 파일을 받아 두세요.")
         st.caption("실제 개인정보는 입력하지 마세요. 이름은 \"김OO\"처럼 가려서 입력합니다.")
 
 
-def render_notices(state: dict, warning: str | None, block: bool) -> None:
+# ---------------------------------------------------------------------------
+# 로그인, 비밀번호 변경
+# ---------------------------------------------------------------------------
+
+def render_login(state: dict) -> None:
+    cfg = auth_config()
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid:
+        st.title("전환배치 후보자 탐색")
+        st.caption("사원번호로 로그인하세요. 처음 비밀번호는 사원번호입니다.")
+        with st.form("login_form"):
+            emp_no = st.text_input("사원번호", max_chars=20)
+            password = st.text_input("비밀번호", type="password", max_chars=100)
+            submitted = st.form_submit_button("로그인", type="primary", width="stretch")
+        if submitted:
+            ok, reason, must_change = auth.verify(emp_no, password, {e["id"] for e in state["employees"]},
+                                                  cfg["admin_ids"], cfg["require_change"])
+            if ok:
+                st.session_state["auth_user"] = emp_no.strip()
+                st.session_state["must_change"] = must_change
+                st.rerun()
+            st.error(reason)
+        if not cfg["admin_ids"]:
+            st.warning("관리자가 설정되지 않았습니다. 배포 설정(Secrets)의 [auth] admin_ids에 관리자 사원번호를 등록하세요.")
+        st.caption("본 도구는 HR 담당자의 검토를 돕는 참고정보를 제공하며, 최종 인사 결정을 하지 않습니다.")
+
+
+def change_password(emp_no: str, prefix: str):
+    current = st.session_state.get(prefix + "current", "")
+    new = st.session_state.get(prefix + "new", "")
+    confirm = st.session_state.get(prefix + "confirm", "")
+    if not auth.check_password(emp_no, current):
+        st.session_state[prefix + "error"] = "현재 비밀번호가 맞지 않습니다."
+        return
+    problem = auth.password_problem(emp_no, new) or (None if new == confirm else "새 비밀번호가 서로 다릅니다.")
+    if problem:
+        st.session_state[prefix + "error"] = problem
+        return
+    auth.set_password(emp_no, new)
+    st.session_state["must_change"] = False
+    for k in ("current", "new", "confirm"):
+        st.session_state[prefix + k] = ""
+    st.toast("비밀번호를 바꿨습니다.")
+
+
+def render_password_form(emp_no: str, forced: bool) -> None:
+    prefix = "pw_forced::" if forced else "pw::"
+    st.text_input("현재 비밀번호" + (" (처음이면 사원번호)" if forced else ""), type="password", key=prefix + "current")
+    st.text_input("새 비밀번호", type="password", key=prefix + "new",
+                  help=f"{auth.MIN_PASSWORD_LENGTH}자 이상, 영문과 숫자를 함께 쓰고, 사원번호와 달라야 합니다.")
+    st.text_input("새 비밀번호 확인", type="password", key=prefix + "confirm")
+    error = st.session_state.pop(prefix + "error", None)
+    if error:
+        st.error(error)
+    st.button("비밀번호 바꾸기", type="primary", on_click=change_password, args=(emp_no, prefix), key=prefix + "submit")
+
+
+def render_forced_password_change(user: dict) -> None:
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid:
+        st.title("비밀번호 변경")
+        st.info(f"{md(user['name'])}님, 처음 로그인하셨거나 관리자가 비밀번호를 초기화했습니다. 새 비밀번호를 정해 주세요.")
+        render_password_form(user["id"], forced=True)
+        st.button("로그아웃", on_click=logout, key="forced_logout")
+
+
+def render_notices(state: dict, warning: str | None, block: bool, user: dict) -> None:
     if warning:
         st.warning("저장 경고: " + warning)
     if block:
@@ -187,7 +332,7 @@ def render_notices(state: dict, warning: str | None, block: bool) -> None:
     flash = st.session_state.pop("_flash", None)
     if flash:
         getattr(st, flash[0])(flash[1])
-    if state["employees"]:
+    if user["is_admin"] and state["employees"]:
         last = state.get("lastBackupAt")
         days = (M.now_kst() - datetime.fromisoformat(last)).days if last else None
         if days is None or days > BACKUP_REMIND_DAYS:
@@ -199,7 +344,12 @@ def render_notices(state: dict, warning: str | None, block: bool) -> None:
 # 후보자 탐색 (PRD 4.1 ~ 4.3)
 # ---------------------------------------------------------------------------
 
-SEARCH_WIDGET_PREFIXES = ("q_sort", "q_dept", "q_pay", "q_unknown", "shown_count")
+SEARCH_WIDGET_PREFIXES = ("q_sort", "q_div", "q_team", "q_pay", "q_unknown", "shown_count")
+EMPTY_FILTERS = {"division": "", "team": "", "payGrades": [], "unknownOnly": False}
+
+
+def my_query(state: dict) -> dict | None:
+    return state.get("userQueries", {}).get(st.session_state.get("auth_user"))
 
 
 def reset_search_widgets():
@@ -210,33 +360,44 @@ def reset_search_widgets():
 
 def run_search():
     target = st.session_state["target_select"]
+    uid = st.session_state.get("auth_user")
 
     def apply(s):
-        prev = s.get("lastQuery") or {}
-        s["lastQuery"] = {"targetJob": target, "sort": prev.get("sort", "score"),
-                          "filters": {"department": "", "payGrades": [], "unknownOnly": False}}
+        prev = s.setdefault("userQueries", {}).get(uid) or {}
+        s["userQueries"][uid] = {"targetJob": target, "sort": prev.get("sort", "score"), "filters": dict(EMPTY_FILTERS)}
     mutate(apply)
     reset_search_widgets()
 
 
 def update_query(**patch):
+    uid = st.session_state.get("auth_user")
+
     def apply(s):
-        if not s.get("lastQuery"):
+        q = s.get("userQueries", {}).get(uid)
+        if not q:
             return
         if "sort" in patch:
-            s["lastQuery"]["sort"] = patch["sort"]
-        s["lastQuery"]["filters"].update(patch.get("filters", {}))
+            q["sort"] = patch["sort"]
+        q["filters"].update(patch.get("filters", {}))
     mutate(apply)
     st.session_state.pop("shown_count", None)
 
 
 def set_status(emp_id: str, target: str, key: str):
+    state = storage.load()[0]
+    if not can_view(state, current_user(state), emp_id):  # 조회 범위 밖 직원은 검토 입력 불가
+        st.session_state["_flash"] = ("error", "조회 범위 밖의 직원입니다.")
+        return
     mutate(lambda s: upsert_review(s, emp_id, target, status=st.session_state[key]))
 
 
-def render_search(state: dict) -> None:
+def render_search(state: dict, user: dict) -> None:
     names = job_names(state)
-    q = state.get("lastQuery")
+    q = my_query(state)
+    pool = visible_employees(state, user)
+    if not user["is_admin"] and not user["scope"]:
+        st.warning("내 소속(본부·사업부) 정보가 없어 조회할 수 있는 직원이 없습니다. 관리자에게 소속 등록을 요청하세요.")
+        return
     if not names:
         st.info("직무 마스터에 등록된 직무가 없습니다. 직무 마스터 탭에서 직무를 추가하거나 가상 샘플 데이터를 불러오세요.")
         return
@@ -249,16 +410,18 @@ def render_search(state: dict) -> None:
                  format_func=lambda j: j if j in names else f"{j} (직무 마스터에서 삭제됨)")
     c2.button("후보자 찾기", type="primary", on_click=run_search, width="stretch")
     st.info(M.DISCLAIMER, icon="ℹ️")
+    st.caption(f"조회 범위: {scope_text(user)} · {len(pool)}명" + ("" if user["is_admin"] else " (본인 제외)"))
 
     if not q:
         st.caption("희망직무를 고르고 [후보자 찾기]를 누르면 추천 후보와 판단 근거를 보여줍니다.")
         return
 
     target = q["targetJob"]
-    result = A.analyze(state["employees"], target, ctx_of(state))
+    result = A.analyze(pool, target, ctx_of(state))
     f = q["filters"]
     filtered = [r for r in result["candidates"]
-                if (not f["department"] or r["employee"]["department"] == f["department"])
+                if (not f["division"] or (r["employee"]["division"] or "") == f["division"])
+                and (not f["team"] or (r["employee"]["team"] or "") == f["team"])
                 and (not f["payGrades"] or r["employee"]["payGrade"] in f["payGrades"])
                 and (not f["unknownOnly"] or r["needs_check"])]
     candidates = A.sort_results(filtered, q["sort"])
@@ -268,17 +431,22 @@ def render_search(state: dict) -> None:
     st.markdown(f"#### '{md(target)}' 추천 후보 :blue[**{len(candidates)}명**]" +
                 ("" if len(candidates) == total else f" (필터 적용, 전체 {total}명 중)"))
 
-    departments = sorted({r["employee"]["department"] for r in result["candidates"] if r["employee"]["department"]})
+    divisions = sorted({r["employee"]["division"] for r in result["candidates"] if r["employee"]["division"]})
+    teams = sorted({r["employee"]["team"] for r in result["candidates"] if r["employee"]["team"]})
     pay_options = sorted({r["employee"]["payGrade"] for r in result["candidates"] if r["employee"]["payGrade"]} | set(f["payGrades"]),
                          key=lambda g: M.PAY_GRADES.index(g) if g in M.PAY_GRADES else 99)
     sort_keys = list(A.SORT_LABELS)
-    k1, k2, k3, k4, k5 = st.columns([1.2, 1.4, 2, 1.2, 1.2], vertical_alignment="bottom")
+    k1, k2, k2b, k3, k4, k5 = st.columns([1.1, 1.3, 1.3, 1.8, 1.1, 1.1], vertical_alignment="bottom")
     k1.selectbox("정렬", sort_keys, index=sort_keys.index(q["sort"]), format_func=A.SORT_LABELS.get, key="q_sort",
                  on_change=lambda: update_query(sort=st.session_state["q_sort"]))
-    dept_options = [""] + departments
-    k2.selectbox("부서", dept_options, index=dept_options.index(f["department"]) if f["department"] in dept_options else 0,
-                 format_func=lambda d: d or "전체", key="q_dept",
-                 on_change=lambda: update_query(filters={"department": st.session_state["q_dept"]}))
+    div_options = [""] + divisions
+    k2.selectbox("사업부", div_options, index=div_options.index(f["division"]) if f["division"] in div_options else 0,
+                 format_func=lambda d: d or "전체", key="q_div",
+                 on_change=lambda: update_query(filters={"division": st.session_state["q_div"]}))
+    team_options = [""] + teams
+    k2b.selectbox("팀", team_options, index=team_options.index(f["team"]) if f["team"] in team_options else 0,
+                  format_func=lambda d: d or "전체", key="q_team",
+                  on_change=lambda: update_query(filters={"team": st.session_state["q_team"]}))
     k3.multiselect("Pay Gr. (복수 선택)", pay_options, default=[g for g in f["payGrades"] if g in pay_options],
                    placeholder="전체", key="q_pay",
                    on_change=lambda: update_query(filters={"payGrades": sorted(
@@ -317,7 +485,7 @@ def render_search(state: dict) -> None:
                 e = r["employee"]
                 c1, c2 = st.columns([5, 1], vertical_alignment="center")
                 unknowns = ", ".join("? " + c["summary"] for c in r["criteria"] if c["result"] == "unknown")
-                c1.markdown(f"{md(e['name'])} / {md_or_missing(e['currentJob'])} / {md_or_missing(e['department'])} — :orange[{md(unknowns)}]")
+                c1.markdown(f"{md(e['name'])} / {md_or_missing(e['currentJob'])} / {md_or_missing(M.org_short(e))} — :orange[{md(unknowns)}]")
                 if c2.button("상세보기", key=f"undet_detail::{e['id']}"):
                     show_detail(e["id"], target)
 
@@ -334,7 +502,7 @@ def render_card(state: dict, r: dict, target: str) -> None:
             badges += {"검토 중": " :blue-badge[검토 중]", "면담 예정": " :green-badge[면담 예정]", "제외": " :gray-badge[제외]"}[status]
         st.markdown(f"**{md(e['name'])} / {md_or_missing(e['currentJob'])} / {md_or_missing(e['payGrade'])}**  \n{badges}")
         st.markdown(
-            f":gray[부서] {md_or_missing(e['department'])}  \n"
+            f":gray[소속] {md_or_missing(M.org_short(e))}  \n"
             f":gray[유관경력] {md_or_missing(career_summary(r))}  \n"
             f":gray[희망직무] {md_or_missing(desired_summary(e['desiredJobs']))}  \n"
             f":gray[현부서 근속] {md_or_missing(A.format_months(r['tenure_months']))}")
@@ -352,12 +520,13 @@ def results_csv(state: dict, target: str, candidates: list[dict]) -> bytes:
     rows = [[f"※ {M.DISCLAIMER}"],
             [f"대상 직무: {target}", f"적용 기준: {criteria_text(state['settings'])}", f"내보낸 일시: {M.now_kst():%Y-%m-%d %H:%M}"],
             [],
-            ["대상직무", "직원ID", "이름", "부서", "Pay Gr.", "직위", "현재직무", "추천 점수", "충족 근거 수",
+            ["대상직무", "사원번호", "이름", "본부", "사업부", "실", "팀", "Pay Gr.", "직위", "현재직무", "추천 점수", "충족 근거 수",
              "희망직무 근거", "유관경력 근거", "현부서 근속 근거", "확인 필요", "검토 상태", "메모", "검토 수정 일시"]]
     for r in candidates:
         e = r["employee"]
         rv = find_review(state, e["id"], target)
-        rows.append([target, e["id"], e["name"], e["department"] or "", e["payGrade"] or "", e["position"] or "",
+        rows.append([target, e["id"], e["name"], e["hq"] or "", e["division"] or "", e["office"] or "", e["team"] or "",
+                     e["payGrade"] or "", e["position"] or "",
                      e["currentJob"], A.format_weight(r["score"]), r["met_count"]]
                     + [f"{A.RESULT_ICONS[c['result']]} {A.RESULT_LABELS[c['result']]}: {c['summary']}" for c in r["criteria"]]
                     + ["예" if r["needs_check"] else "", rv["status"] if rv else "미검토", rv["memo"] if rv else "",
@@ -370,6 +539,9 @@ def results_csv(state: dict, target: str, candidates: list[dict]) -> bytes:
 # ---------------------------------------------------------------------------
 
 def save_review_from_dialog(emp_id: str, target: str):
+    state = storage.load()[0]
+    if not can_view(state, current_user(state), emp_id):
+        return
     status = st.session_state[f"dlg_status::{emp_id}::{target}"]
     memo = st.session_state[f"dlg_memo::{emp_id}::{target}"]
     mutate(lambda s: upsert_review(s, emp_id, target, status=status, memo=memo))
@@ -380,8 +552,8 @@ def save_review_from_dialog(emp_id: str, target: str):
 def show_detail(emp_id: str, target: str) -> None:
     state, _, _ = load_state()
     e = find_employee(state, emp_id)
-    if not e:
-        st.error("직원을 찾을 수 없습니다.")
+    if not e or not can_view(state, current_user(state), emp_id):
+        st.error("직원을 찾을 수 없거나 조회 범위 밖의 직원입니다.")
         return
     today = A.today_string()
     r = A.evaluate_employee(e, target, ctx_of(state))
@@ -396,7 +568,8 @@ def show_detail(emp_id: str, target: str) -> None:
     if hire:
         months = A.months_inclusive(hire, today)
         hire_text = f"{hire} (근속 {A.format_months(months)})" if months is not None else hire
-    profile = [("대상 직무", target), ("현재 직무", e["currentJob"]), ("부서", e["department"]), ("현부서 배치일", e["deptStartDate"]),
+    profile = [("사원번호", e["id"]), ("대상 직무", target), ("본부", e["hq"]), ("사업부", e["division"]),
+               ("실", e["office"]), ("팀", e["team"]), ("현재 직무", e["currentJob"]), ("현부서 배치일", e["deptStartDate"]),
                ("Pay Gr.", e["payGrade"]), ("Pay Gr. 년차", None if e["payGradeYears"] is None else f"{e['payGradeYears']}년차"),
                ("직책", e["jobTitle"]), ("직위", e["position"]), ("당사입사일", hire_text)]
     pc = st.columns(2)
@@ -453,7 +626,8 @@ def show_detail(emp_id: str, target: str) -> None:
     st.text_area("메모", value=review["memo"] if review else "", max_chars=MEMO_MAX, key=memo_key,
                  placeholder="면담 일정, 확인할 내용 등을 적어 두세요. 입력칸 밖을 누르면 자동 저장됩니다.",
                  on_change=save_review_from_dialog, args=(emp_id, target))
-    st.caption("수정 일시: " + (fmt_dt(review["updatedAt"]) if review and review["updatedAt"] else "아직 검토 기록이 없습니다."))
+    st.caption("수정 일시: " + (fmt_dt(review["updatedAt"]) + (f" · 입력자 {md(review['updatedBy'])}" if review.get("updatedBy") else "")
+                              if review and review["updatedAt"] else "아직 검토 기록이 없습니다."))
     if st.button("저장하고 닫기", type="primary"):
         save_review_from_dialog(emp_id, target)
         st.rerun()
@@ -464,6 +638,8 @@ def show_detail(emp_id: str, target: str) -> None:
 # ---------------------------------------------------------------------------
 
 def delete_employee(emp_id: str):
+    if not require_admin():
+        return
     def apply(s):
         s["employees"] = [e for e in s["employees"] if e["id"] != emp_id]
         s["reviews"] = [r for r in s["reviews"] if r["employeeId"] != emp_id]
@@ -471,6 +647,11 @@ def delete_employee(emp_id: str):
 
 
 def apply_import(parsed: dict, mode: str):
+    """mode: 'upsert'(같은 사원번호는 새 값으로 바꾸고 없으면 추가, 검토 기록 유지) / 'replace'(전체 교체)"""
+    if not require_admin():
+        return
+    counts = {"added": 0, "updated": 0}
+
     def apply(s):
         if mode == "replace":
             s["employees"], s["reviews"] = [], []
@@ -478,9 +659,18 @@ def apply_import(parsed: dict, mode: str):
         for name in parsed["new_jobs"]:
             if name not in known:
                 s["jobs"].append({"name": name, "relatedJobs": []})
+        index = {e["id"]: i for i, e in enumerate(s["employees"])}
         for row in parsed["rows"]:
-            s["employees"].append({"id": next_employee_id(s["employees"]), **row["employee"]})
-    mutate(apply, f"{len(parsed['rows'])}명을 가져왔습니다.")
+            emp = row["employee"]
+            if emp["id"] in index:
+                s["employees"][index[emp["id"]]] = emp
+                counts["updated"] += 1
+            else:
+                index[emp["id"]] = len(s["employees"])
+                s["employees"].append(emp)
+                counts["added"] += 1
+    mutate(apply)
+    st.toast(f"추가 {counts['added']}명 · 갱신 {counts['updated']}명")
     st.session_state["uploader_n"] = st.session_state.get("uploader_n", 0) + 1  # 업로드 칸 비우기
 
 
@@ -516,8 +706,12 @@ def render_import(state: dict) -> None:
             if p["rows"]:
                 st.caption("오류가 있는 행은 빼고 정상 행만 반영합니다.")
         if p["rows"]:
+            existing_ids = {e["id"] for e in state["employees"]}
+            n_update = sum(1 for r in p["rows"] if r["employee"]["id"] in existing_ids)
+            st.caption(f"같은 사원번호가 이미 있는 {n_update}명은 CSV 내용으로 바뀌고, 나머지 {len(p['rows']) - n_update}명은 새로 추가됩니다. "
+                       "검토 기록은 그대로 남습니다.")
             c1, c2, _ = st.columns([1, 1, 2])
-            c1.button(f"정상 {len(p['rows'])}명 추가", type="primary", on_click=apply_import, args=(p, "append"), width="stretch")
+            c1.button(f"정상 {len(p['rows'])}명 추가·갱신", type="primary", on_click=apply_import, args=(p, "upsert"), width="stretch")
             with c2.popover("기존 직원을 모두 지우고 바꾸기", width="stretch"):
                 st.warning(f"기존 직원 {len(state['employees'])}명과 검토 기록을 모두 지우고 CSV의 {len(p['rows'])}명으로 바꿉니다.")
                 st.button("바꾸기", type="primary", on_click=apply_import, args=(p, "replace"), key="import_replace_confirm")
@@ -541,14 +735,14 @@ def render_employees(state: dict) -> None:
     if not state["employees"]:
         st.info("등록된 직원이 없습니다.")
         return
-    keyword = st.text_input("직원 검색", placeholder="이름, 부서, Pay Gr., 직무로 찾기", key="emp_filter").strip().lower()
+    keyword = st.text_input("직원 검색", placeholder="사원번호, 이름, 소속, Pay Gr., 직무로 찾기", key="emp_filter").strip().lower()
     employees = [e for e in state["employees"] if not keyword or any(
         v and keyword in str(v).lower()
-        for v in [e["id"], e["name"], e["department"], e["payGrade"], e["jobTitle"], e["position"], e["currentJob"],
+        for v in [e["id"], e["name"], e["hq"], e["division"], e["office"], e["team"], e["payGrade"], e["jobTitle"], e["position"], e["currentJob"],
                   *M.all_desired_jobs(e["desiredJobs"])])]
     st.caption(f"검색 결과 {len(employees)}명 / 전체 {len(state['employees'])}명" if keyword else f"전체 {len(employees)}명")
     df = pd.DataFrame([{
-        "ID": e["id"], "이름": e["name"], "부서": e["department"] or "데이터 없음",
+        "사원번호": e["id"], "이름": e["name"], "소속": M.org_path(e) or "데이터 없음",
         "Pay Gr.": (e["payGrade"] or "데이터 없음") + (f" ({e['payGradeYears']}년차)" if e["payGradeYears"] is not None else ""),
         "직책 / 직위": f"{e['jobTitle'] or '데이터 없음'} / {e['position'] or '데이터 없음'}",
         "현재직무": e["currentJob"] or "데이터 없음", "현부서 배치일": e["deptStartDate"] or "데이터 없음",
@@ -586,7 +780,7 @@ def _to_date(value: str | None):
 def employee_form(emp_id: str | None) -> None:
     state, _, _ = load_state()
     existing = find_employee(state, emp_id) if emp_id else None
-    e = existing or {"name": "", "department": None, "payGrade": None, "payGradeYears": None, "jobTitle": None, "position": None,
+    e = existing or {"id": "", "name": "", "hq": None, "division": None, "office": None, "team": None, "payGrade": None, "payGradeYears": None, "jobTitle": None, "position": None,
                      "hireDate": None, "currentJob": "", "deptStartDate": None, "jobHistory": [], "desiredJobs": M.empty_desired(),
                      "evaluations": []}
     d = M.normalize_desired(e["desiredJobs"])
@@ -600,8 +794,14 @@ def employee_form(emp_id: str | None) -> None:
     st.markdown(f"### {'직원 수정: ' + md(e['name']) if existing else '직원 추가'}")
     st.markdown("**인적 정보**")
     c1, c2 = st.columns(2)
-    name = c1.text_input("이름 *", value=e["name"], max_chars=30, placeholder="예: 김OO", key=k + "name")
-    dept = c2.text_input("부서", value=e["department"] or "", max_chars=50, key=k + "dept")
+    emp_no = c1.text_input("사원번호 *", value=e["id"], max_chars=20, disabled=bool(existing), key=k + "empno",
+                           help="로그인 아이디로 쓰입니다. 저장한 뒤에는 바꿀 수 없습니다." if not existing else "사원번호는 바꿀 수 없습니다.")
+    name = c2.text_input("이름 *", value=e["name"], max_chars=30, placeholder="예: 김OO", key=k + "name")
+    st.caption("소속: 조회 권한은 사업부(비어 있으면 본부) 기준으로 정해집니다.")
+    oc = st.columns(4)
+    org = {key: oc[i].text_input(label, value=e[key] or "", max_chars=50, key=k + "org_" + key)
+           for i, (key, label) in enumerate(M.ORG_LEVELS)}
+    c1, c2 = st.columns(2)
     pay = c1.selectbox("Pay Gr.", [""] + pay_choices, index=([""] + pay_choices).index(e["payGrade"] or ""),
                        format_func=lambda v: v or "선택 안 함", key=k + "pay")
     pay_years = c2.number_input("Pay Gr. 년차", min_value=0, max_value=50, step=1, value=e["payGradeYears"], key=k + "payyears")
@@ -660,6 +860,14 @@ def employee_form(emp_id: str | None) -> None:
 
     errors = []
     name = name.strip()
+    emp_no = (e["id"] if existing else emp_no).strip()
+    if not existing:
+        if not emp_no:
+            errors.append("사원번호를 입력하세요.")
+        elif not re.fullmatch(M.EMPLOYEE_NO_PATTERN, emp_no):
+            errors.append("사원번호는 영문·숫자·하이픈 20자 이내로 입력하세요.")
+        elif find_employee(load_state()[0], emp_no):
+            errors.append(f"사원번호 {emp_no}는 이미 등록되어 있습니다.")
     if not name:
         errors.append("이름을 입력하세요.")
     if not current:
@@ -716,18 +924,22 @@ def employee_form(emp_id: str | None) -> None:
     placed = M.all_desired_jobs(desired)
     desired["unspecified"] = [j for j in d["unspecified"] if j not in placed]  # 시점을 지정한 직무는 미지정 목록에서 뺀다
     new_values = {
-        "name": name, "department": dept.strip() or None, "payGrade": pay or None,
+        "name": name, **{key: v.strip() or None for key, v in org.items()}, "payGrade": pay or None,
         "payGradeYears": int(pay_years) if pay_years is not None else None, "jobTitle": title.strip() or None,
         "position": position or None, "hireDate": _iso(hire), "currentJob": current, "deptStartDate": _iso(dept_start),
         "jobHistory": hist, "desiredJobs": desired, "evaluations": M.normalize_evaluations(evals),
     }
+
+    if not require_admin():
+        st.error("관리자만 직원 정보를 바꿀 수 있습니다.")
+        return
 
     def apply(s):
         if existing:
             target = find_employee(s, existing["id"])
             target.update(new_values)
         else:
-            s["employees"].append({"id": next_employee_id(s["employees"]), **new_values})
+            s["employees"].append({"id": emp_no, **new_values})
     mutate(apply, "직원 정보를 수정했습니다." if existing else "직원을 추가했습니다.")
     for key in [x for x in st.session_state.keys() if str(x).startswith(k)]:
         del st.session_state[key]
@@ -759,8 +971,9 @@ def rename_job_everywhere(s: dict, old: str, new: str) -> int:
     for r in s["reviews"]:
         if r["targetJob"] == old:
             r["targetJob"] = new
-    if s.get("lastQuery") and s["lastQuery"]["targetJob"] == old:
-        s["lastQuery"]["targetJob"] = new
+    for q in s.get("userQueries", {}).values():
+        if q["targetJob"] == old:
+            q["targetJob"] = new
     return changed
 
 
@@ -776,6 +989,8 @@ def job_name_error(name: str, others: list[str]) -> str | None:
 
 
 def add_job():
+    if not require_admin():
+        return
     name = st.session_state.get("new_job_name", "").strip()
     state, _, _ = load_state()
     err = job_name_error(name, job_names(state))
@@ -787,6 +1002,8 @@ def add_job():
 
 
 def save_job(old: str):
+    if not require_admin():
+        return
     new = st.session_state[f"job_name::{old}"].strip()
     related = st.session_state[f"job_related::{old}"]
     state, _, _ = load_state()
@@ -808,6 +1025,8 @@ def save_job(old: str):
 
 
 def delete_job(name: str):
+    if not require_admin():
+        return
     def apply(s):
         s["jobs"] = [j for j in s["jobs"] if j["name"] != name]
         for j in s["jobs"]:
@@ -852,6 +1071,8 @@ def render_jobs(state: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def restore_backup(new_state: dict):
+    if not require_admin():
+        return
     storage.save(new_state)
     st.toast("백업 파일로 복원했습니다.")
     st.session_state["restore_n"] = st.session_state.get("restore_n", 0) + 1
@@ -859,6 +1080,8 @@ def restore_backup(new_state: dict):
 
 
 def reset_all():
+    if not require_admin():
+        return
     storage.save(storage.empty_state())
     st.toast("전체 초기화했습니다.")
     st.session_state["reset_agree"] = False
@@ -884,7 +1107,7 @@ def render_settings(state: dict) -> None:
         required = {cid: rc[i].checkbox(A.CRITERIA_LABELS[cid], value=s["requiredCriteria"].get(cid, False), key=f"req_{cid}")
                     for i, cid in enumerate(("R1", "R2", "R3"))}
         st.caption("인사평가는 분석 기준으로 쓰지 않습니다 (상세보기 참고용).")
-        if st.form_submit_button("기준 저장", type="primary"):
+        if st.form_submit_button("기준 저장", type="primary") and require_admin():
             weights = {t: round(v, 2) for t, v in weights.items()}
             if not storage.valid_term_weights(weights):
                 st.error("희망 시점 가중치는 0 ~ 1 사이 숫자이고, 단기 ≥ 중기 ≥ 장기 순서여야 합니다.")
@@ -901,7 +1124,7 @@ def render_settings(state: dict) -> None:
     with c1:
         st.download_button("백업 파일 받기 (JSON)", storage.backup_bytes(state), f"전환배치도구_백업_{file_stamp()}.json",
                            "application/json", on_click=record_backup, width="stretch", key="set_backup")
-        st.caption("HTML 버전과 같은 형식이라 서로 옮길 수 있습니다.")
+        st.caption("계정·비밀번호 정보는 백업 파일에 들어가지 않습니다. HTML 버전 백업은 복원할 수 있지만, 이 백업은 HTML 버전에서 열 수 없습니다(로그인용 소속 구조가 추가됨).")
     with c2:
         up = st.file_uploader("백업 파일로 복원", type=["json"], key=f"restore_{st.session_state.get('restore_n', 0)}")
         if up:
@@ -921,31 +1144,136 @@ def render_settings(state: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# 사용자 관리 (관리자)
+# ---------------------------------------------------------------------------
+
+def admin_action(action: str, emp_no: str):
+    if not require_admin():
+        return
+    me = st.session_state.get("auth_user")
+    if action == "reset":
+        auth.reset_password(emp_no)
+        st.toast(f"{emp_no}의 비밀번호를 사원번호로 초기화했습니다. 다음 로그인 때 새 비밀번호를 정하게 됩니다.")
+    elif action == "unlock":
+        auth.unlock(emp_no)
+        st.toast(f"{emp_no}의 잠금을 풀었습니다.")
+    elif action == "grant":
+        auth.set_role(emp_no, True)
+        st.toast(f"{emp_no}에게 관리자 권한을 주었습니다.")
+    elif action == "revoke":
+        if emp_no == me:
+            st.session_state["_flash"] = ("error", "자기 자신의 관리자 권한은 해제할 수 없습니다.")
+            return
+        auth.set_role(emp_no, False)
+        st.toast(f"{emp_no}의 관리자 권한을 해제했습니다.")
+
+
+def render_users(state: dict, user: dict) -> None:
+    cfg = auth_config()
+    data = auth.load()
+    emp_by_id = {e["id"]: e for e in state["employees"]}
+    granted = [uid for uid, rec in data["users"].items() if rec.get("role") == "admin"]
+    ids = list(emp_by_id) + [x for x in cfg["admin_ids"] + granted if x not in emp_by_id]
+    ids = list(dict.fromkeys(ids))
+
+    st.caption("아이디는 사원번호이고, 처음 비밀번호도 사원번호입니다. "
+               + ("첫 로그인 때 새 비밀번호로 바꾸게 합니다. " if cfg["require_change"] else "")
+               + "일반 사용자는 자기 사업부(비어 있으면 본부) 소속원만 조회하고 검토를 입력합니다.")
+    st.caption("배포 설정(Secrets)에 등록된 관리자는 앱에서 해제할 수 없습니다. 직원 목록에서 삭제된 사원번호는 로그인할 수 없습니다(관리자 제외).")
+
+    def role_of(uid):
+        if uid in cfg["admin_ids"]:
+            return "관리자 (배포 설정)"
+        return "관리자 (앱에서 부여)" if data["users"].get(uid, {}).get("role") == "admin" else "일반"
+
+    rows = []
+    for uid in ids:
+        e = emp_by_id.get(uid)
+        rec = data["users"].get(uid, {})
+        admin = auth.is_admin(uid, data, cfg["admin_ids"])
+        scope = M.scope_of(e)
+        rows.append({"사원번호": uid, "이름": e["name"] if e else "(직원 목록에 없음)",
+                     "소속": (M.org_path(e) or "데이터 없음") if e else "-",
+                     "권한": role_of(uid),
+                     "조회 범위": "전체" if admin else (scope["label"] if scope else "없음 (소속 정보 없음)"),
+                     "비밀번호": "처음 비밀번호(사원번호)" if auth.uses_initial_password(uid, data) else "변경함",
+                     "상태": "잠김" if auth.is_locked(uid, data) else "정상",
+                     "마지막 로그인": fmt_dt(rec.get("lastLoginAt")) or "-"})
+    keyword = st.text_input("사용자 검색", placeholder="사원번호, 이름, 소속으로 찾기", key="user_filter").strip().lower()
+    shown = [r for r in rows if not keyword or any(keyword in str(v).lower() for v in r.values())]
+    st.dataframe(pd.DataFrame(shown), hide_index=True, width="stretch")
+    if not shown:
+        return
+
+    sel = st.selectbox("관리할 사용자", [r["사원번호"] for r in shown],
+                       format_func=lambda uid: f"{uid} · {emp_by_id[uid]['name'] if uid in emp_by_id else '(직원 목록에 없음)'}",
+                       key="user_select")
+    is_cfg_admin = sel in cfg["admin_ids"]
+    is_granted = data["users"].get(sel, {}).get("role") == "admin"
+    c1, c2, c3, _ = st.columns([1.2, 1, 1.4, 2])
+    with c1.popover("비밀번호 초기화", width="stretch"):
+        st.caption(f"{sel}의 비밀번호를 사원번호로 되돌리고 잠금을 풉니다.")
+        st.button("초기화하기", type="primary", on_click=admin_action, args=("reset", sel), key=f"u_reset::{sel}")
+    c2.button("잠금 해제", on_click=admin_action, args=("unlock", sel), disabled=not auth.is_locked(sel, data),
+              width="stretch", key=f"u_unlock::{sel}")
+    if is_cfg_admin:
+        c3.button("관리자 (배포 설정)", disabled=True, width="stretch", key=f"u_role::{sel}")
+    elif is_granted:
+        c3.button("관리자 권한 해제", on_click=admin_action, args=("revoke", sel), disabled=sel == user["id"],
+                  width="stretch", key=f"u_role::{sel}")
+    else:
+        with c3.popover("관리자 권한 주기", width="stretch"):
+            st.warning("관리자는 모든 직원 데이터를 보고, 직원 데이터 업로드·설정 변경·백업을 할 수 있습니다.")
+            st.button("권한 주기", type="primary", on_click=admin_action, args=("grant", sel), key=f"u_grant::{sel}")
+
+
+# ---------------------------------------------------------------------------
 # 시작
 # ---------------------------------------------------------------------------
 
 def main() -> None:
     state, warning, block = load_state()
-    render_sidebar(state, warning, block)
+    user = current_user(state)
+    if not user:
+        if st.session_state.pop("auth_user", None):
+            st.session_state["_flash"] = ("warning", "계정을 더 이상 쓸 수 없어 로그아웃했습니다. 관리자에게 문의하세요.")
+        flash = st.session_state.pop("_flash", None)
+        if flash:
+            getattr(st, flash[0])(flash[1])
+        render_login(state)
+        return
+    if st.session_state.get("must_change"):
+        render_forced_password_change(user)
+        return
+
+    render_sidebar(state, user)
     st.title("전환배치 후보자 탐색")
     # 안내 문구는 항상 같은 상자 안에 넣는다. 탭 위의 요소 개수가 바뀌면 Streamlit이 탭을 새로 만들어
     # 보고 있던 탭이 첫 번째 탭으로 돌아가기 때문이다.
     with st.container():
-        render_notices(state, warning, block)
+        render_notices(state, warning, block, user)
         if not state["employees"] and not state["jobs"]:
-            st.info("아직 등록된 데이터가 없습니다. 기능을 확인하려면 가상 샘플 데이터를 불러오세요. "
-                    "샘플 데이터는 실제 인물과 관계없는 가상 데이터입니다 (직원 30명, 직무 8개). 실제 업무 데이터는 직원 관리 탭에서 CSV로 가져올 수 있습니다.")
-            st.button("가상 샘플 데이터 불러오기", type="primary", on_click=load_sample, key="sample_onboarding")
+            if user["is_admin"]:
+                st.info("아직 등록된 데이터가 없습니다. 기능을 확인하려면 가상 샘플 데이터를 불러오세요. "
+                        "샘플 데이터는 실제 인물과 관계없는 가상 데이터입니다 (직원 30명, 직무 8개). 실제 업무 데이터는 직원 관리 탭에서 CSV로 가져올 수 있습니다.")
+                st.button("가상 샘플 데이터 불러오기", type="primary", on_click=load_sample, key="sample_onboarding")
+            else:
+                st.info("아직 등록된 데이터가 없습니다. 관리자에게 문의하세요.")
 
-    tabs = st.tabs(["후보자 탐색", "직원 관리", "직무 마스터", "분석 기준 설정"])
+    if not user["is_admin"]:
+        render_search(state, user)
+        return
+    tabs = st.tabs(["후보자 탐색", "직원 관리", "직무 마스터", "분석 기준 설정", "사용자 관리"])
     with tabs[0]:
-        render_search(state)
+        render_search(state, user)
     with tabs[1]:
         render_employees(state)
     with tabs[2]:
         render_jobs(state)
     with tabs[3]:
         render_settings(state)
+    with tabs[4]:
+        render_users(state, user)
 
 
 main()

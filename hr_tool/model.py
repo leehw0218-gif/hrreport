@@ -89,6 +89,50 @@ def normalize_evaluations(value) -> list[dict]:
     return [by_year[y] for y in sorted(by_year, reverse=True)]
 
 
+# 소속: 본부 > 사업부 > 실 > 팀
+ORG_LEVELS = [("hq", "본부"), ("division", "사업부"), ("office", "실"), ("team", "팀")]
+
+# 사원번호 형식 (영문·숫자·하이픈 1~20자)
+EMPLOYEE_NO_PATTERN = r"[A-Za-z0-9-]{1,20}"
+
+
+def org_path(e: dict) -> str | None:
+    """'본부 > 사업부 > 실 > 팀'. 빈 단계는 건너뛴다. 모두 비면 None"""
+    parts = [e.get(k) for k, _ in ORG_LEVELS if e.get(k)]
+    return " > ".join(parts) or None
+
+
+def org_short(e: dict) -> str | None:
+    """카드용 짧은 소속: 사업부(없으면 본부) · 실 · 팀"""
+    head = e.get("division") or e.get("hq")
+    parts = [p for p in (head, e.get("office"), e.get("team")) if p]
+    return " · ".join(parts) or None
+
+
+def scope_of(user: dict | None) -> dict | None:
+    """조회 범위. 사용자가 속한 사업부 기준, 사업부가 비어 있으면 본부 기준.
+
+    사업부 이름이 다른 본부에도 있을 수 있어 사업부 기준일 때는 본부까지 같이 맞춘다.
+    본부·사업부가 모두 비어 있으면 None (범위를 추정하지 않는다, P6).
+    """
+    if not user:
+        return None
+    if user.get("division"):
+        return {"level": "division", "hq": user.get("hq"), "division": user["division"],
+                "label": " > ".join(p for p in (user.get("hq"), user["division"]) if p) + " (사업부 기준)"}
+    if user.get("hq"):
+        return {"level": "hq", "hq": user["hq"], "label": f"{user['hq']} (본부 기준, 사업부 미지정)"}
+    return None
+
+
+def in_scope(e: dict, scope: dict | None) -> bool:
+    if not scope:
+        return False
+    if scope["level"] == "division":
+        return e.get("division") == scope["division"] and e.get("hq") == scope["hq"]
+    return e.get("hq") == scope["hq"]
+
+
 def evaluation_years(employees: list[dict], now: datetime | None = None) -> list[int]:
     """상세보기에 보여 줄 연도 (최신 순 5개).
 

@@ -17,7 +17,9 @@ from . import analysis as A
 from . import model as M
 
 APP_ID = "hr-transfer-tool"
-SCHEMA_VERSION = 2  # HTML 버전과 같은 구조. 백업 파일을 서로 주고받을 수 있다
+# v3: 사원번호를 id로 쓰고, 부서 대신 본부·사업부·실·팀 (로그인·조회 범위용, Streamlit 버전 전용).
+# HTML 버전(v2) 백업은 복원할 수 있지만, v3 백업은 HTML 버전에서 열 수 없다.
+SCHEMA_VERSION = 3
 
 DATA_DIR = Path(os.environ.get("HR_TOOL_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 DATA_FILE = DATA_DIR / "hr_data.json"
@@ -34,7 +36,7 @@ def default_settings() -> dict:
 
 def empty_state() -> dict:
     return {"version": SCHEMA_VERSION, "employees": [], "jobs": [], "settings": default_settings(),
-            "reviews": [], "lastQuery": None, "savedAt": None, "lastBackupAt": None}
+            "reviews": [], "userQueries": {}, "savedAt": None, "lastBackupAt": None}
 
 
 # ---------------------------------------------------------------------------
@@ -52,7 +54,11 @@ def sanitize_employee(e: dict) -> dict:
     return {
         "id": str(e.get("id")),
         "name": str(e.get("name")),
-        "department": _str_or_none(e.get("department")),
+        # 소속. v2 이하의 '부서'는 가장 아래 단위인 팀으로 옮긴다
+        "hq": _str_or_none(e.get("hq")),
+        "division": _str_or_none(e.get("division")),
+        "office": _str_or_none(e.get("office")),
+        "team": _str_or_none(e["team"] if "team" in e else e.get("department")),
         # v1의 grade(직급)는 이름만 바뀐 같은 값이라 그대로 옮긴다
         "payGrade": _str_or_none(e["payGrade"] if "payGrade" in e else e.get("grade")),
         "payGradeYears": years if valid_years else None,
@@ -79,6 +85,7 @@ def sanitize_review(r: dict) -> dict:
         "status": r.get("status") if r.get("status") in M.REVIEW_STATUSES else "미검토",
         "memo": r.get("memo") if isinstance(r.get("memo"), str) else "",
         "updatedAt": _str_or_none(r.get("updatedAt")),
+        "updatedBy": _str_or_none(r.get("updatedBy")),
     }
 
 
@@ -93,7 +100,8 @@ def sanitize_query(q):
         "targetJob": q["targetJob"],
         "sort": q.get("sort") if q.get("sort") in A.SORT_LABELS else "score",
         "filters": {
-            "department": f.get("department") if isinstance(f.get("department"), str) else "",
+            "division": f.get("division") if isinstance(f.get("division"), str) else "",
+            "team": f.get("team") if isinstance(f.get("team"), str) else "",
             "payGrades": pay,
             "unknownOnly": f.get("unknownOnly") is True,
         },
@@ -135,7 +143,9 @@ def migrate(data) -> tuple[dict, str | None, bool, bool]:
                  for j in data.get("jobs") or [] if isinstance(j, dict)],
         "settings": settings,
         "reviews": [sanitize_review(r) for r in data.get("reviews") or [] if isinstance(r, dict)],
-        "lastQuery": sanitize_query(data.get("lastQuery")),
+        # 마지막 검색 조건은 사용자(사원번호)마다 따로 둔다. 예전 공용 lastQuery는 버린다
+        "userQueries": {str(k): clean for k, raw in (data.get("userQueries") or {}).items()
+                        if (clean := sanitize_query(raw)) is not None},
         "savedAt": _str_or_none(data.get("savedAt")),
         "lastBackupAt": _str_or_none(data.get("lastBackupAt")),
     }

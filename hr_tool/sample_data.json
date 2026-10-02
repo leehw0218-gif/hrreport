@@ -58,9 +58,12 @@
  ],
  "employees": [
   {
-   "id": "E0001",
+   "id": "100001",
    "name": "김OO",
-   "department": "(샘플)생산1팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "생산실",
+   "team": "생산1팀",
    "payGrade": "G3",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -121,9 +124,12 @@
    ]
   },
   {
-   "id": "E0002",
+   "id": "100002",
    "name": "이OO",
-   "department": "(샘플)자재팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "자재팀",
    "payGrade": "G2",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -173,9 +179,12 @@
    ]
   },
   {
-   "id": "E0003",
+   "id": "100003",
    "name": "박OO",
-   "department": "(샘플)구매팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "구매팀",
    "payGrade": "G4",
    "payGradeYears": 5,
    "jobTitle": "파트장",
@@ -234,9 +243,12 @@
    ]
   },
   {
-   "id": "E0004",
+   "id": "100004",
    "name": "최OO",
-   "department": "(샘플)품질팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "품질실",
+   "team": "품질팀",
    "payGrade": "G3",
    "payGradeYears": 4,
    "jobTitle": "팀원",
@@ -297,9 +309,12 @@
    ]
   },
   {
-   "id": "E0005",
+   "id": "100005",
    "name": "정OO",
-   "department": "(샘플)영업팀",
+   "hq": "(샘플)영업본부",
+   "division": "국내영업사업부",
+   "office": null,
+   "team": "영업팀",
    "payGrade": "G2",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -342,9 +357,12 @@
    ]
   },
   {
-   "id": "E0006",
+   "id": "100006",
    "name": "강OO",
-   "department": "(샘플)생산2팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "생산실",
+   "team": "생산2팀",
    "payGrade": "G4",
    "payGradeYears": 6,
    "jobTitle": "팀장",
@@ -395,9 +413,12 @@
    ]
   },
   {
-   "id": "E0007",
+   "id": "100007",
    "name": "조OO",
-   "department": "(샘플)인사팀",
+   "hq": "(샘플)경영지원본부",
+   "division": null,
+   "office": "인사실",
+   "team": "인사팀",
    "payGrade": "G3",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -456,9 +477,12 @@
    ]
   },
   {
-   "id": "E0008",
+   "id": "100008",
    "name": "윤OO",
-   "department": "(샘플)재무팀",
+   "hq": "(샘플)경영지원본부",
+   "division": null,
+   "office": "재무실",
+   "team": "재무팀",
    "payGrade": "G2",
    "payGradeYears": 1,
    "jobTitle": "팀원",
@@ -503,9 +527,12 @@
    ]
   },
   {
-   "id": "E0009",
+   "id": "100009",
    "name": "장OO",
-   "department": "(샘플)생산기획팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "기획실",
+   "team": "생산기획팀",
    "payGrade": "R2",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -564,9 +591,12 @@
    ]
   },
   {
-   "id": "E0010",
+   "id": "100010",
    "name": "임OO",
-   "department": "(샘플)자재팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "자재팀",
    "payGrade": "G4",
    "payGradeYears": 4,
    "jobTitle": "파트장",
@@ -625,9 +655,12 @@
    ]
   },
   {
-   "id": "E0011",
+   "id": "100011",
    "name": "한OO",
-   "department": "(샘플)품질팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "품질실",
+   "team": "품질팀",
    "payGrade": "G1",
    "payGradeYears": 1,
    "jobTitle": "팀원",
@@ -660,9 +693,12 @@
    ]
   },
   {
-   "id": "E0012",
+   "id": "100012",
    "name": "오OO",
-   "department": "(샘플)영업팀",
+   "hq": "(샘플)영업본부",
+   "division": "국내영업사업부",
+   "office": null,
+   "team": "영업팀",
    "payGrade": "G3",
    "payGradeYears": 5,
    "jobTitle": "팀원",
@@ -719,9 +755,12 @@
    ]
   },
   {
-   "id": "E0013",
+   "id": "100013",
    "name": "서OO",
-   "department": "(샘플)생산1팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "생산실",
+   "team": "생산1팀",
    "payGrade": "G2",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -782,9 +821,12 @@
    ]
   },
   {
-   "id": "E0014",
+   "id": "100014",
    "name": "신OO",
-   "department": "(샘플)구매팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "구매팀",
    "payGrade": "R3",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -837,9 +879,12 @@
    ]
   },
   {
-   "id": "E0015",
+   "id": "100015",
    "name": "권OO",
-   "department": "(샘플)인사팀",
+   "hq": "(샘플)경영지원본부",
+   "division": null,
+   "office": "인사실",
+   "team": "인사팀",
    "payGrade": "G2",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -884,9 +929,12 @@
    ]
   },
   {
-   "id": "E0016",
+   "id": "100016",
    "name": "황OO",
-   "department": "(샘플)재무팀",
+   "hq": "(샘플)경영지원본부",
+   "division": null,
+   "office": "재무실",
+   "team": "재무팀",
    "payGrade": "G4",
    "payGradeYears": 7,
    "jobTitle": "팀장",
@@ -945,9 +993,12 @@
    ]
   },
   {
-   "id": "E0017",
+   "id": "100017",
    "name": "안OO",
-   "department": "(샘플)생산2팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "생산실",
+   "team": "생산2팀",
    "payGrade": "G3",
    "payGradeYears": 4,
    "jobTitle": "팀원",
@@ -1000,9 +1051,12 @@
    ]
   },
   {
-   "id": "E0018",
+   "id": "100018",
    "name": "송OO",
-   "department": "(샘플)생산기획팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "기획실",
+   "team": "생산기획팀",
    "payGrade": "R4",
    "payGradeYears": 3,
    "jobTitle": "파트장",
@@ -1057,9 +1111,12 @@
    ]
   },
   {
-   "id": "E0019",
+   "id": "100019",
    "name": "류OO",
-   "department": "(샘플)자재팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "자재팀",
    "payGrade": "G1",
    "payGradeYears": 1,
    "jobTitle": "팀원",
@@ -1092,9 +1149,12 @@
    ]
   },
   {
-   "id": "E0020",
+   "id": "100020",
    "name": "전OO",
-   "department": "(샘플)품질팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "품질실",
+   "team": "품질팀",
    "payGrade": "G3",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -1153,9 +1213,12 @@
    ]
   },
   {
-   "id": "E0021",
+   "id": "100021",
    "name": "홍OO",
-   "department": "(샘플)영업팀",
+   "hq": "(샘플)영업본부",
+   "division": "국내영업사업부",
+   "office": null,
+   "team": "영업팀",
    "payGrade": "G4",
    "payGradeYears": 8,
    "jobTitle": "팀장",
@@ -1206,9 +1269,12 @@
    ]
   },
   {
-   "id": "E0022",
+   "id": "100022",
    "name": "고OO",
-   "department": "(샘플)생산1팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "생산실",
+   "team": "생산1팀",
    "payGrade": "G2",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -1264,9 +1330,12 @@
    ]
   },
   {
-   "id": "E0023",
+   "id": "100023",
    "name": "문OO",
-   "department": "(샘플)인사팀",
+   "hq": "(샘플)경영지원본부",
+   "division": null,
+   "office": "인사실",
+   "team": "인사팀",
    "payGrade": "G3",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -1319,9 +1388,12 @@
    ]
   },
   {
-   "id": "E0024",
+   "id": "100024",
    "name": "양OO",
-   "department": "(샘플)재무팀",
+   "hq": "(샘플)경영지원본부",
+   "division": null,
+   "office": "재무실",
+   "team": "재무팀",
    "payGrade": "R3",
    "payGradeYears": 4,
    "jobTitle": "팀원",
@@ -1374,9 +1446,12 @@
    ]
   },
   {
-   "id": "E0025",
+   "id": "100025",
    "name": "손OO",
-   "department": "(샘플)생산기획팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "기획실",
+   "team": "생산기획팀",
    "payGrade": "R1",
    "payGradeYears": null,
    "jobTitle": "팀원",
@@ -1419,9 +1494,12 @@
    ]
   },
   {
-   "id": "E0026",
+   "id": "100026",
    "name": "배OO",
-   "department": "(샘플)구매팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "구매팀",
    "payGrade": "G2",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -1480,9 +1558,12 @@
    ]
   },
   {
-   "id": "E0027",
+   "id": "100027",
    "name": "백OO",
-   "department": "(샘플)자재팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "자재실",
+   "team": "자재팀",
    "payGrade": "G3",
    "payGradeYears": 2,
    "jobTitle": "팀원",
@@ -1535,9 +1616,12 @@
    ]
   },
   {
-   "id": "E0028",
+   "id": "100028",
    "name": "허OO",
-   "department": "(샘플)품질팀",
+   "hq": "(샘플)생산본부",
+   "division": "제2사업부",
+   "office": "품질실",
+   "team": "품질팀",
    "payGrade": "G4",
    "payGradeYears": 5,
    "jobTitle": "파트장",
@@ -1596,9 +1680,12 @@
    ]
   },
   {
-   "id": "E0029",
+   "id": "100029",
    "name": "유OO",
-   "department": "(샘플)생산2팀",
+   "hq": "(샘플)생산본부",
+   "division": "제1사업부",
+   "office": "생산실",
+   "team": "생산2팀",
    "payGrade": "G3",
    "payGradeYears": 3,
    "jobTitle": "팀원",
@@ -1657,9 +1744,12 @@
    ]
   },
   {
-   "id": "E0030",
+   "id": "100030",
    "name": "남OO",
-   "department": "(샘플)영업팀",
+   "hq": "(샘플)영업본부",
+   "division": "국내영업사업부",
+   "office": null,
+   "team": "영업팀",
    "payGrade": "G1",
    "payGradeYears": 2,
    "jobTitle": null,

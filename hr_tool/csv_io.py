@@ -13,8 +13,12 @@ from . import analysis as A
 from . import model as M
 
 COLUMN_LABELS = {
+    "id": "사원번호",
     "name": "이름",
-    "department": "부서",
+    "hq": "본부",
+    "division": "사업부",
+    "office": "실",
+    "team": "팀",
     "payGrade": "Pay Gr.",
     "payGradeYears": "Pay Gr. 년차",
     "jobTitle": "직책",
@@ -29,14 +33,18 @@ COLUMN_LABELS = {
     "jobHistory": "직무이력",
     "evaluations": "인사평가",
 }
-EXPORT_KEYS = ["name", "department", "payGrade", "payGradeYears", "jobTitle", "position", "hireDate",
+EXPORT_KEYS = ["id", "name", "hq", "division", "office", "team", "payGrade", "payGradeYears", "jobTitle", "position", "hireDate",
                "currentJob", "deptStartDate", "desiredShort", "desiredMid", "desiredLong", "jobHistory", "evaluations"]
-REQUIRED_KEYS = ["name", "currentJob"]
+REQUIRED_KEYS = ["id", "name", "currentJob"]
 
 # 열 이름(공백·점·괄호 제거, 소문자) → 열 키. 예전 열 이름(직급, 희망직무)도 받는다
 HEADER_ALIASES = {
+    "사원번호": "id", "사번": "id",
     "이름": "name",
-    "부서": "department",
+    "본부": "hq",
+    "사업부": "division",
+    "실": "office",
+    "팀": "team", "부서": "team",  # 예전 '부서' 열은 팀으로 받는다
     "paygr": "payGrade", "직급": "payGrade",
     "paygr년차": "payGradeYears", "직급년차": "payGradeYears",
     "직책": "jobTitle",
@@ -54,7 +62,7 @@ HEADER_ALIASES = {
 SCORE_COLUMN_RE = re.compile(r"평가|점수|고과|성과|score|rating|kpi", re.I)
 JOB_NAME_FORBIDDEN = [":", "|", ";", "~"]
 
-TEMPLATE_EXAMPLE = ["김OO", "생산1팀", "G3", "3", "팀원", "책임매니저", "2018-03-01", "생산관리", "2021-08-01",
+TEMPLATE_EXAMPLE = ["100001", "김OO", "생산본부", "제1사업부", "생산실", "생산1팀", "G3", "3", "팀원", "책임매니저", "2018-03-01", "생산관리", "2021-08-01",
                     "구매관리", "생산기획", "", "생산기획:2018-03-01~2021-07-31|생산관리:2021-08-01~", "2025:E/M|2024:M/E"]
 
 
@@ -217,6 +225,7 @@ def parse_employees(text: str, known_jobs: list[str]) -> dict:
     out["legacy_desired"] = "desiredLegacy" in index
 
     new_jobs: dict[str, bool] = {}
+    seen_ids: dict[str, int] = {}
 
     def cell(row, key):
         i = index.get(key)
@@ -233,6 +242,7 @@ def parse_employees(text: str, known_jobs: list[str]) -> dict:
     for idx, row in enumerate(table[1:]):
         row_number = idx + 2  # 엑셀 기준 행 번호 (1행은 열 이름)
         messages: list[str] = []
+        emp_no = cell(row, "id")
         name = cell(row, "name")
         current_job = cell(row, "currentJob")
         dept_start = cell(row, "deptStartDate")
@@ -241,6 +251,12 @@ def parse_employees(text: str, known_jobs: list[str]) -> dict:
         pay_years = cell(row, "payGradeYears")
         position = cell(row, "position")
 
+        if not emp_no:
+            messages.append("사원번호가 비어 있습니다")
+        elif not re.fullmatch(M.EMPLOYEE_NO_PATTERN, emp_no):
+            messages.append(f'사원번호 "{emp_no}"는 영문·숫자·하이픈 20자 이내여야 합니다')
+        elif emp_no in seen_ids:
+            messages.append(f"사원번호 {emp_no}가 {seen_ids[emp_no]}행에도 있습니다 (중복)")
         if not name:
             messages.append("이름이 비어 있습니다")
         if not current_job:
@@ -268,6 +284,8 @@ def parse_employees(text: str, known_jobs: list[str]) -> dict:
         history = _parse_history(cell(row, "jobHistory"), current_job, messages)
         evaluations = _parse_evaluations(cell(row, "evaluations"), messages)
 
+        if emp_no and emp_no not in seen_ids:
+            seen_ids[emp_no] = row_number
         if messages:
             out["errors"].append({"row_number": row_number, "messages": messages})
             continue
@@ -278,8 +296,12 @@ def parse_employees(text: str, known_jobs: list[str]) -> dict:
         if looks_like_real_name(name):
             out["name_warnings"].append({"row_number": row_number, "name": name})
         out["rows"].append({"row_number": row_number, "employee": {
+            "id": emp_no,
             "name": name,
-            "department": cell(row, "department") or None,
+            "hq": cell(row, "hq") or None,
+            "division": cell(row, "division") or None,
+            "office": cell(row, "office") or None,
+            "team": cell(row, "team") or None,
             "payGrade": pay or None,
             "payGradeYears": int(pay_years) if pay_years else None,
             "jobTitle": cell(row, "jobTitle") or None,
@@ -311,7 +333,8 @@ def employees_to_csv(employees: list[dict]) -> bytes:
     for e in employees:
         d = M.normalize_desired(e.get("desiredJobs"))
         values = {
-            "name": e.get("name"), "department": e.get("department"), "payGrade": e.get("payGrade"),
+            "id": e.get("id"), "name": e.get("name"), "hq": e.get("hq"), "division": e.get("division"),
+            "office": e.get("office"), "team": e.get("team"), "payGrade": e.get("payGrade"),
             "payGradeYears": "" if e.get("payGradeYears") is None else str(e["payGradeYears"]),
             "jobTitle": e.get("jobTitle"), "position": e.get("position"), "hireDate": e.get("hireDate"),
             "currentJob": e.get("currentJob"), "deptStartDate": e.get("deptStartDate"),
