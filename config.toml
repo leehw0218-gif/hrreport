@@ -1,0 +1,18 @@
+[theme]
+base = "light"
+primaryColor = "#2c5aa0"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f5f7"
+textColor = "#1d2330"
+
+[server]
+# 업로드 파일 크기 제한 (MB). 직원 CSV·백업 JSON에는 충분하다
+maxUploadSize = 20
+
+[browser]
+# 사용 통계를 Streamlit 서버로 보내지 않는다 (데이터가 외부로 나가지 않도록)
+gatherUsageStats = false
+
+[client]
+# 오른쪽 위 Deploy 등 개발자 메뉴를 숨긴다
+toolbarMode = "viewer"
