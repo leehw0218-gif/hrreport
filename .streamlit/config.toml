@@ -1,1 +1,36 @@
+[theme]
+base = "light"
+# 키컬러: 버튼, 선택 표시, 링크
+primaryColor = "#003B82"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f5f7"
+textColor = "#1d2330"
+linkColor = "#003B82"
+# 화면 안 :blue[...] 글자와 파란 배지·배경도 키컬러 계열로 맞춘다
+blueColor = "#003B82"
+blueTextColor = "#003B82"
+blueBackgroundColor = "#e5ecf5"
+# 글꼴은 static/ 폴더의 Pretendard를 쓴다 (외부 서버에서 받지 않음)
+font = "Pretendard, sans-serif"
+headingFont = "Pretendard, sans-serif"
+
+[[theme.fontFaces]]
+family = "Pretendard"
+url = "app/static/PretendardVariable.woff2"
+weight = "45 920"
+style = "normal"
+
+[server]
+# static/ 폴더(글꼴 파일)를 앱에서 읽을 수 있게 한다
+enableStaticServing = true
+# 업로드 파일 크기 제한 (MB). 직원 CSV·백업 JSON에는 충분하다
+maxUploadSize = 20
+
+[browser]
+# 사용 통계를 Streamlit 서버로 보내지 않는다 (데이터가 외부로 나가지 않도록)
+gatherUsageStats = false
+
+[client]
+# 오른쪽 위 Deploy 등 개발자 메뉴를 숨긴다
+toolbarMode = "viewer"
 
