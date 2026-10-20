@@ -83,6 +83,15 @@ static/Pretendard-LICENSE.txt
 - **공개 범위를 확인하세요.** 공개 저장소로 배포한 앱은 링크를 아는 누구나 열 수 있습니다. 비공개(private) 저장소로 배포한 뒤 앱 설정의 Sharing에서 볼 수 있는 사람을 지정하세요.
 - **실제 개인정보는 넣지 마세요.** 개발·시연 단계에서는 가상 샘플 데이터만 씁니다.
 
+## 가상 샘플 데이터
+
+`hr_tool/sample_data.json`은 철강업 직무 25개(9개 직무군)와 가상 직원 3,000명입니다. 실제 인물과 관계없고, 이름은 성만 남겨 "김OO"처럼 씁니다.
+
+- 직무 목록: 미국 BLS OEWS(May 2023) 제철·합금철 제조업(NAICS 331100)에서 고용이 많은 직업을 참고해 골랐습니다.
+- 유관직무: [O\*NET 31.0 Database](https://www.onetcenter.org/database.html)의 Related Occupations에서 25개 직무 안의 연결만 골라 직무당 최대 4개로 정리했습니다.
+  This data includes information from the O\*NET 31.0 Database by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA), used under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license. 회사 직무명으로 옮기고 일부만 골라 쓰는 등 원본을 바꿨습니다. O\*NET® is a trademark of USDOL/ETA.
+- 만드는 과정(노트북)은 GitHub에 올리지 않고 따로 보관합니다.
+
 ## 글꼴
 
 본문과 제목에 [Pretendard](https://github.com/orioncactus/pretendard)(v1.3.9, SIL Open Font License 1.1)를 씁니다. 글꼴 파일을 `static/`에 포함해 외부 서버에서 받지 않습니다. 라이선스 전문은 `static/Pretendard-LICENSE.txt`에 있습니다.
